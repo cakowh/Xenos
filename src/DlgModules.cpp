@@ -28,10 +28,10 @@ INT_PTR ModulesDlg::OnInit( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
     //
     // Insert columns
     //
-    _modList.AddColumn( L"Name",       100, Name );
-    _modList.AddColumn( L"Image Base", 100, ImageBase );
-    _modList.AddColumn( L"Platform",   60,  Platform );
-    _modList.AddColumn( L"Load type",  80,  LoadType );
+    _modList.AddColumn( L"模块",       100, Name );
+    _modList.AddColumn( L"基址", 100, ImageBase );
+    _modList.AddColumn( L"平台",   60,  Platform );
+    _modList.AddColumn( L"加载方式",  80,  LoadType );
 
     RefreshList();
 
@@ -61,7 +61,7 @@ INT_PTR ModulesDlg::OnUnload( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
         // Validate module
         if (barrier.type == blackbone::wow_32_32 && mod->type == blackbone::mt_mod64)
         {
-            Message::ShowError( hDlg, L"Please use Xenos64.exe to unload 64 bit modules from WOW64 process" );
+            Message::ShowError( hDlg, L"请使用 Xenos64.exe 来从WOW64进程里卸载64位模块" );
             return TRUE;
         }
 
@@ -71,7 +71,7 @@ INT_PTR ModulesDlg::OnUnload( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
             RefreshList();
         }
         else
-            Message::ShowError( hDlg, L"Module not found" );
+            Message::ShowError( hDlg, L"未找到模块" );
     }
 
     return TRUE;
@@ -112,23 +112,23 @@ void ModulesDlg::RefreshList( )
 
         // Module platform
         if (mod.second->type == blackbone::mt_mod32)
-            platfom = L"32 bit";
+            platfom = L"32位";
         else if (mod.second->type == blackbone::mt_mod64)
-            platfom = L"64 bit";
+            platfom = L"64位";
         else
-            platfom = L"Unknown";
+            platfom = L"未知";
 
         // Mapping type
         if (mod.second->manual == true)
-            detected = L"Manual map";
+            detected = L"自定义map";
         else if (modsLdr.count( mod.first ))
-            detected = L"Normal";
+            detected = L"普通";
         else if (modsSec.count( mod.first ))
-            detected = L"Section only";
+            detected = L"仅map段";
         else if (mod.second->name.find( L"Unknown_0x" ) == 0)
-            detected = L"PE header";
+            detected = L"map PE头";
         else
-            detected = L"Unknown";
+            detected = L"未知";
 
         _modList.AddItem( mod.second->name, static_cast<LPARAM>(mod.second->baseAddress), { address, platfom, detected } );
     }

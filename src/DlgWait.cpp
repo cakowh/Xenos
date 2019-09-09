@@ -19,7 +19,7 @@ DlgWait::~DlgWait()
 INT_PTR DlgWait::OnInit( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
 {
     Dialog::OnInit( hDlg, message, wParam, lParam );
-    std::wstring text = L"Awaiting '" + blackbone::Utils::StripPath( _context.procPath ) + L"' launch...";
+    std::wstring text = L"µÈ´ý '" + blackbone::Utils::StripPath( _context.procPath ) + L"' Æô¶¯¡­¡­";
     
     Static_SetText( GetDlgItem( hDlg, IDC_WAIT_TEXT ), text.c_str() );
     SendMessage( GetDlgItem( hDlg, IDC_WAIT_BAR ), PBM_SETMARQUEE, (WPARAM)TRUE, (LPARAM)30 );

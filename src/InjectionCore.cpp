@@ -42,12 +42,12 @@ NTSTATUS InjectionCore::GetTargetProcess( InjectContext& context, PROCESS_INFORM
     // Await new process
     if (context.cfg.processMode == ManualLaunch)
     {
-        xlog::Normal( "Waiting on process %ls", context.procPath.c_str() );
+        xlog::Normal( "等待 %ls 进程运行", context.procPath.c_str() );
 
         auto procName = blackbone::Utils::StripPath( context.procPath );
         if (procName.empty())
         {
-            Message::ShowWarning( _hMainDlg, L"Please select executable to wait for\n" );
+            Message::ShowWarning( _hMainDlg, L"请选择您稍后要启动的目标程序\n" );
             return STATUS_NOT_FOUND;
         }
         
@@ -63,7 +63,7 @@ NTSTATUS InjectionCore::GetTargetProcess( InjectContext& context, PROCESS_INFORM
             // Canceled by user
             if (!context.waitActive)
             {
-                xlog::Warning( "Process wait canceled by user" );
+                xlog::Warning( "用户取消了等待" );
                 return STATUS_REQUEST_ABORTED;
             }
 
@@ -83,7 +83,7 @@ NTSTATUS InjectionCore::GetTargetProcess( InjectContext& context, PROCESS_INFORM
                 context.pid = context.procDiff.front().pid;
                 context.procDiff.erase( context.procDiff.begin() );
 
-                xlog::Verbose( "Got process %d", context.pid );
+                xlog::Verbose( "拿到进程 %d", context.pid );
                 break;
             }
             else
@@ -109,7 +109,7 @@ NTSTATUS InjectionCore::GetTargetProcess( InjectContext& context, PROCESS_INFORM
         if (!CreateProcessW( context.procPath.c_str(), (LPWSTR)context.cfg.procCmdLine.c_str(),
             NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, blackbone::Utils::GetParent( context.procPath ).c_str(), &si, &pi ))
         {
-            Message::ShowError( _hMainDlg, L"Failed to create new process.\n" + blackbone::Utils::GetErrorDescription( LastNtStatus() ) );
+            Message::ShowError( _hMainDlg, L"创建新进程失败\n" + blackbone::Utils::GetErrorDescription( LastNtStatus() ) );
             return LastNtStatus();
         }
 
@@ -190,7 +190,7 @@ NTSTATUS InjectionCore::GetTargetProcess( InjectContext& context, PROCESS_INFORM
 
         if (status != STATUS_SUCCESS)
         {
-            std::wstring errmsg = L"Can not attach to the process.\n" + blackbone::Utils::GetErrorDescription( status );
+            std::wstring errmsg = L"无法附加到进程\n" + blackbone::Utils::GetErrorDescription( status );
             Message::ShowError( _hMainDlg, errmsg );
 
             return status;
@@ -233,7 +233,7 @@ NTSTATUS InjectionCore::ValidateContext( InjectContext& context, const blackbone
     // Invalid path
     if (context.images.empty())
     {
-        Message::ShowError( _hMainDlg, L"Please add at least one image to inject" );
+        Message::ShowError( _hMainDlg, L"请至少添加一个要注入的模块" );
         return STATUS_INVALID_PARAMETER_1;
     }
 
@@ -243,14 +243,14 @@ NTSTATUS InjectionCore::ValidateContext( InjectContext& context, const blackbone
         // Only x64 drivers are supported
         if (img.mType() != blackbone::mt_mod64)
         {
-            Message::ShowError( _hMainDlg, L"Can't map x86 drivers - '" + img.name() + L"'" );
+            Message::ShowError( _hMainDlg, L"不能注入32位驱动程序 - '" + img.name() + L"'" );
             return STATUS_INVALID_IMAGE_WIN_32;
         }
 
         // Image must be native
         if (img.subsystem() != IMAGE_SUBSYSTEM_NATIVE)
         {
-            Message::ShowError( _hMainDlg, L"Can't map image with non-native subsystem - '" + img.name() + L"'" );
+            Message::ShowError( _hMainDlg, L"不能注入有其它依赖的模块 - '" + img.name() + L"'" );
             return STATUS_INVALID_IMAGE_HASH;
         }
 
@@ -260,7 +260,7 @@ NTSTATUS InjectionCore::ValidateContext( InjectContext& context, const blackbone
     // No process selected
     if (!_process.valid())
     {
-        Message::ShowError( _hMainDlg, L"Please select valid process before injection" );
+        Message::ShowError( _hMainDlg, L"请选择您要注入的进程" );
         return STATUS_INVALID_HANDLE;
     }
 
@@ -269,14 +269,14 @@ NTSTATUS InjectionCore::ValidateContext( InjectContext& context, const blackbone
     // Validate architecture
     if (!img.pureIL() && img.mType() == blackbone::mt_mod32 && barrier.targetWow64 == false)
     {
-        Message::ShowError( _hMainDlg, L"Can't inject 32 bit image '" + img.name() + L"' into native 64 bit process" );
+        Message::ShowError( _hMainDlg, L"不能把32位的模块 '" + img.name() + L"' 注入到64位的进程中" );
         return STATUS_INVALID_IMAGE_WIN_32;
     }
 
     // Trying to inject x64 dll into WOW64 process
     if (!img.pureIL() && img.mType() == blackbone::mt_mod64 && barrier.targetWow64 == true)
     {
-        Message::ShowError( _hMainDlg, L"Can't inject 64 bit image '" + img.name() + L"' into WOW64 process" );
+        Message::ShowError( _hMainDlg, L"不能把64位的模块 '" + img.name() + L"' 注入到32位（即使是WOW64）的进程中" );
         return STATUS_INVALID_IMAGE_WIN_64;
     }
 
@@ -310,7 +310,7 @@ NTSTATUS InjectionCore::ValidateContext( InjectContext& context, const blackbone
     {
         if (img.pureIL() && (context.cfg.injectMode == Kernel_MMap || !img.isExe()))
         {
-            Message::ShowError( _hMainDlg, L"Pure managed class library '" + img.name() + L"' can't be manually mapped yet" );
+            Message::ShowError( _hMainDlg, L"纯托管类库 '" + img.name() + L"' 不能手动map" );
             return STATUS_INVALID_IMAGE_FORMAT;
         }
 
@@ -367,12 +367,12 @@ NTSTATUS InjectionCore::ValidateInit( const std::string& init, uint32_t& initRVA
         {
             if (init.empty())
             {
-                Message::ShowError( _hMainDlg, L"Please select '" + img.name() + L"' entry point" );
+                Message::ShowError( _hMainDlg, L"请选择 '" + img.name() + L"' 入口点" );
             }
             else
             {
                 auto str = blackbone::Utils::FormatString(
-                    L"Image '%ls' does not contain specified method - '%ls'",
+                    L"映像 '%ls' 缺失以下方法 - '%ls'",
                     img.name().c_str(),
                     blackbone::Utils::AnsiToWstring( init.c_str() ).c_str()
                     );
@@ -396,7 +396,7 @@ NTSTATUS InjectionCore::ValidateInit( const std::string& init, uint32_t& initRVA
         {
             initRVA = 0;
             auto str = blackbone::Utils::FormatString(
-                L"Image '%ls' does not contain specified export - '%ls'",
+                L"映像 '%ls' 缺失以下导出点 - '%ls'",
                 img.name().c_str(),
                 blackbone::Utils::AnsiToWstring( init.c_str() ).c_str()
                 );
@@ -532,7 +532,7 @@ NTSTATUS InjectionCore::InjectSingle( InjectContext& context, blackbone::pe::PEI
         pThread = _process.threads().getMostExecuted();
         if (!pThread)
         {
-            Message::ShowError( _hMainDlg, L"Failed to get suitable thread for execution");
+            Message::ShowError( _hMainDlg, L"没有找到适合修改的线程");
             return status = STATUS_NOT_FOUND;
         }
     }
@@ -611,7 +611,7 @@ NTSTATUS InjectionCore::InjectSingle( InjectContext& context, blackbone::pe::PEI
     else if (!NT_SUCCESS( status ))
     {
         wchar_t errBuf[128] = { 0 };
-        wsprintfW( errBuf, L"Failed to inject image '%ls'.\nError code 0x%X", img.path().c_str(), status );
+        wsprintfW( errBuf, L"注入 '%ls' 失败！\n错误代码： 0x%X", img.path().c_str(), status );
         Message::ShowError( _hMainDlg, errBuf );
     }
 
@@ -632,7 +632,7 @@ NTSTATUS InjectionCore::InjectSingle( InjectContext& context, blackbone::pe::PEI
         if (_process.modules().Unlink( mod ) == false)
         {
             status = ERROR_FUNCTION_FAILED;
-            Message::ShowError( _hMainDlg, L"Failed to unlink module '" + img.path() + L"'" );
+            Message::ShowError( _hMainDlg, L"无法结构模块 '" + img.path() + L"'" );
         }
     
     return status;

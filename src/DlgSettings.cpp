@@ -47,12 +47,12 @@ INT_PTR DlgSettings::OnInit( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
     _mmapOptions.hideVad.disable();
 
     // Fill injection types
-    _injectionType.Add( L"Native inject", Normal );
-    _injectionType.Add( L"Manual map", Manual );
+    _injectionType.Add( L"原生注入", Normal );
+    _injectionType.Add( L"自定义map", Manual );
 
-    _injectionType.Add( L"Kernel (CreateThread)", Kernel_Thread );
-    _injectionType.Add( L"Kernel (APC)", Kernel_APC );
-    _injectionType.Add( L"Kernel (Manual map)", Kernel_MMap );
+    _injectionType.Add( L"内核注入（创建进程）", Kernel_Thread );
+    _injectionType.Add( L"内核注入（APC）", Kernel_APC );
+    _injectionType.Add( L"内核注入（自定义map）", Kernel_MMap );
     //_injectionType.Add( L"Kernel driver manual map", Kernel_DriverMap );
 
     // Disable some driver-dependent stuff
@@ -116,14 +116,14 @@ DWORD DlgSettings::HandleDriver( uint32_t type )
     // Try to enable test signing
     if (!NT_SUCCESS( status ))
     {
-        auto text = L"Failed to load BlackBone driver:\n\n" + blackbone::Utils::GetErrorDescription( status );
+        auto text = L"加载BlackBone驱动失败:\n\n" + blackbone::Utils::GetErrorDescription( status );
         Message::ShowError( _hwnd, text );
 
         // Detect test signing
         if (status == STATUS_INVALID_IMAGE_HASH)
         {
             // Ask user to enable test signing
-            if (Message::ShowQuestion( _hwnd, L"Would you like to enable Driver Test signing mode to load driver?" ))
+            if (Message::ShowQuestion( _hwnd, L"您要关闭Windows驱动签名验证吗？（有些游戏在这个模式可能会拒绝运行）" ))
             {
                 STARTUPINFOW si = { 0 };
                 PROCESS_INFORMATION pi = { 0 };
@@ -138,14 +138,14 @@ DWORD DlgSettings::HandleDriver( uint32_t type )
                 // For some reason running BCDedit directly does not enable test signing from WOW64 process
                 if (CreateProcessW( bcdpath.c_str(), L"/C Bcdedit.exe -set TESTSIGNING ON", NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi ))
                 {
-                    Message::ShowWarning( _hwnd, L"You must reboot your computer for the changes to take effect" );
+                    Message::ShowWarning( _hwnd, L"Windows驱动签名验证已关闭，但您需要重启才能生效。" );
 
                     CloseHandle( pi.hProcess );
                     CloseHandle( pi.hThread );
                 }
                 else
                 {
-                    Message::ShowError( _hwnd, L"Failed to enable Test signing. Please do it manually" );
+                    Message::ShowError( _hwnd, L"关闭Windows驱动签名验证失败" );
                     status = LastNtStatus();
                 }
 

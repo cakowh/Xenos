@@ -56,8 +56,8 @@ INT_PTR MainDlg::OnInit( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
     _inject.Attach( _hwnd, IDC_EXECUTE );
 
     // Setup modules view
-    _modules.AddColumn( L"Name", 150, 0 );
-    _modules.AddColumn( L"Architecture", 100, 1 );
+    _modules.AddColumn( L"模块文件", 150, 0 );
+    _modules.AddColumn( L"程序架构", 100, 1 );
 
     ListView_SetExtendedListViewStyle( _modules.hwnd(), LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER );
 
@@ -83,14 +83,14 @@ INT_PTR MainDlg::OnInit( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
         0, 0, 0, 10, hDlg, NULL, GetModuleHandle( NULL ), NULL ) );
 
     _status.SetParts( { 150, 200, -1 } );
-    _status.SetText( 0, L"Default profile" );
+    _status.SetText( 0, L"默认注入方案" );
 
 #ifdef USE64
     _status.SetText( 1, L"x64" );
 #else
     _status.SetText( 1, L"x86" );
 #endif
-    _status.SetText( 2, L"Idle" );
+    _status.SetText( 2, L"洛仙都 - 准备就绪" );
 
     LoadConfig( _defConfig );
 
@@ -133,7 +133,7 @@ INT_PTR MainDlg::OnLoadImage( HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
     std::wstring path;
     EnableWindow( GetDlgItem( hDlg, IDC_ADD_MOD ), FALSE );
     bool res = OpenSaveDialog(
-        L"All (*.*)\0*.*\0Dynamic link library (*.dll)\0*.dll\0System driver (*.sys)\0*.sys\0",
+        L"所有文件 (*.*)\0*.*\0动态链接库 (*.dll)\0*.dll\0驱动程序 (*.sys)\0*.sys\0",
         (_profileMgr.config().injectMode == Kernel_DriverMap) ? 3 : 2,
         path 
         );
@@ -220,7 +220,7 @@ INT_PTR MainDlg::OnSelectExecutable( HWND hDlg, UINT message, WPARAM wParam, LPA
     std::wstring path;
 
     EnableWindow( GetDlgItem( hDlg, IDC_SELECT_PROC ), FALSE );
-    if (OpenSaveDialog( L"All (*.*)\0*.*\0Executable image (*.exe)\0*.exe\0", 2, path ))
+    if (OpenSaveDialog( L"所有文件 (*.*)\0*.*\0应用程序 (*.exe)\0*.exe\0", 2, path ))
         SetActiveProcess( 0, path );
     else
         _procList.reset();
@@ -250,9 +250,9 @@ INT_PTR MainDlg::OnLoadProfile( HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 {
     std::wstring path;
 #ifdef USE64
-    if (OpenSaveDialog( L"Xenos profiles (*.xpr64)\0*.xpr64\0", 1, path ))
+    if (OpenSaveDialog( L"注入方案文件 (*.xpr64)\0*.xpr64\0", 1, path ))
 #else
-    if (OpenSaveDialog( L"Xenos profiles (*.xpr)\0*.xpr\0", 1, path ))
+    if (OpenSaveDialog( L"注入方案文件 (*.xpr)\0*.xpr\0", 1, path ))
 #endif
     {
         // Reset loaded images
@@ -272,9 +272,9 @@ INT_PTR MainDlg::OnSaveProfile( HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 {
     std::wstring path;
 #ifdef USE64
-    if (OpenSaveDialog( L"Xenos profiles (*.xpr64)\0*.xpr64\0", 1, path, true, L"xpr64" ))
+    if (OpenSaveDialog( L"注入方案文件 (*.xpr64)\0*.xpr64\0", 1, path, true, L"xpr64" ))
 #else
-    if (OpenSaveDialog( L"Xenos profiles (*.xpr)\0*.xpr\0", 1, path, true, L"xpr" ))
+    if (OpenSaveDialog( L"注入方案文件 (*.xpr)\0*.xpr\0", 1, path, true, L"xpr" ))
 #endif
     {
         SaveConfig( path );
@@ -296,9 +296,9 @@ INT_PTR MainDlg::OnProtectSelf( HWND hDlg, UINT message, WPARAM wParam, LPARAM l
     }
 
     if (!NT_SUCCESS( status ))
-        Message::ShowError( hDlg, L"Failed to protect current process.\n" + blackbone::Utils::GetErrorDescription( status ) );
+        Message::ShowError( hDlg, L"保护当前进程失败！\n" + blackbone::Utils::GetErrorDescription( status ) );
     else
-        Message::ShowInfo( hDlg, L"Successfully protected" );
+        Message::ShowInfo( hDlg, L"成功保护当前进程！" );
 
     return TRUE;
 }
@@ -314,7 +314,7 @@ INT_PTR MainDlg::OnEjectModules( HWND hDlg, UINT message, WPARAM wParam, LPARAM 
         auto status = _core.process().Attach( pid );
         if (status != STATUS_SUCCESS)
         {
-            std::wstring errmsg = L"Can not attach to process.\n" + blackbone::Utils::GetErrorDescription( status );
+            std::wstring errmsg = L"无法附加到进程！\n" + blackbone::Utils::GetErrorDescription( status );
             Message::ShowError( hDlg, errmsg );
             return TRUE;
         }
@@ -322,7 +322,7 @@ INT_PTR MainDlg::OnEjectModules( HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 
     if (!_core.process().valid())
     {
-        Message::ShowError( hDlg, L"Please select valid process before unloading modules" );
+        Message::ShowError( hDlg, L"卸载模块前请选择一个可用的进程！" );
         return TRUE;
     }
 

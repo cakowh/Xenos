@@ -158,7 +158,7 @@ void MainDlg::Inject()
     context.procList.clear();
     context.procDiff.clear();
 
-    _status.SetText( 2, L"Injecting..." );
+    _status.SetText( 2, L"正在注入……" );
 
     // Show wait dialog
     if (context.cfg.processMode == ManualLaunch)
@@ -181,7 +181,7 @@ void MainDlg::Inject()
     }
 
     _inject.enable();
-    _status.SetText( 2, L"Idle" );
+    _status.SetText( 2, L"洛仙都 - 准备就绪" );
 }
 
 /// <summary>
@@ -287,14 +287,14 @@ DWORD MainDlg::LoadImageFile( const std::wstring& path )
     if (std::find_if( _images.begin(), _images.end(),
         [&path]( std::shared_ptr<blackbone::pe::PEImage>& img ) { return path == img->path(); } ) != _images.end())
     {
-        Message::ShowInfo( _hwnd, L"Image '" + path + L"' is already in the list" );
+        Message::ShowInfo( _hwnd, L"模块 '" + path + L"' 已经在列表中" );
         return ERROR_ALREADY_EXISTS;
     }
 
     // Check if image is a PE file
     if (!NT_SUCCESS( img->Load( path ) ))
     {
-        std::wstring errstr = std::wstring( L"File \"" ) + path + L"\" is not a valid PE image";
+        std::wstring errstr = std::wstring( L"您选择的 \"" ) + path + L"\" 不是一个有效的PE映像";
         Message::ShowError( _hwnd, errstr.c_str() );
 
         img->Release();
@@ -340,11 +340,11 @@ void MainDlg::AddToModuleList( std::shared_ptr<blackbone::pe::PEImage>& img )
 
     // Module platform
     if (img->mType() == blackbone::mt_mod32)
-        platfom = L"32 bit";
+        platfom = L"32位";
     else if (img->mType() == blackbone::mt_mod64)
-        platfom = L"64 bit";
+        platfom = L"64位";
     else
-        platfom = L"Unknown";
+        platfom = L"未知";
 
     _images.emplace_back( img );
     _modules.AddItem( blackbone::Utils::StripPath( img->path() ), 0, { platfom } );
